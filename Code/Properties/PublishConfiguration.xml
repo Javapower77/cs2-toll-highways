@@ -1,0 +1,56 @@
+<Publish>
+  <ModId Value="112028" />
+  <DisplayName Value="Intersections Collection" />
+  <ShortDescription Value="A set of highway and railroad intersections" />
+  <LongDescription>## Description
+This asset pack add several highway roads and railroad intersections to use in your map.
+
+## Added Assets
+
+
+## NOTE
+
+## SPECIAL THANKS
+I would like to thanks a lot for the patience on answering my question in order to keep learning on modding CS2 to the people on the Cities Skyline Modding Discord Server.
+* krzychu124
+* Bruceyboy24804
+* StarQ / Qoushik
+* TDW
+* yenyang
+* Tigon Ologdring
+* Pro Best Cities
+* jk142
+... to mention some of them!
+
+## DISCLAIMER
+* Safe to remove. This mod will not break your save if removed. However the assets will no longer work.
+* This mod may require ***Asset Packs Manager*** which is highly experimental. This mod shouldn't break the save game. But subscribing to assets that require this without the dependency will pop up errors. Worst case you'll get error popups on game load and/or grey boxes in save. But either way, YOU ARE RESPONSIBLE for any damage.</LongDescription>
+  <Thumbnail Value="Code/Properties/Thumbnail.png" />
+  <Screenshot Value="Code/Properties/Previews/screenshot1.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot19.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot26.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot2.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot5.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot6.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot7.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot8.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot9.jpg" />
+  <Screenshot Value="Code/Properties/Previews/screenshot10.jpg" />
+  <Tag Value="Code Mod" />
+  <ModVersion Value="1.00.0" />
+  <GameVersion Value="1.3.3f1" />
+  <!-- Asset Packs Manager -->
+  <Dependency Id="78903" />
+  <!-- I18n EveryWhere -->
+  <Dependency Id="75426" />
+  <!-- Asset Icon Library -->
+  <Dependency Id="79634" />
+  <ChangeLog>## Patch 1.07
+* Fixed an issue of bad array length. Reported by TrevorHall and samlee860407. Thanks!
+* Fixed road direction for several interesctions. Reported by rzzirrah. Thanks.
+* Add a new Divergent Diamond intersection requested by Buster355.
+* I will be looking for more interesections to add in this mod in a near future.</ChangeLog>
+  <ExternalLink Type="discord" Url="https://discord.gg/UkKAfRqfCn" />
+  <ExternalLink Type="github" Url="https://github.com/Javapower77/cs2-highway-intersections-collection" />
+  <ForumLink Value="https://forum.paradoxplaza.com/forum/threads/intersections-collection.1764052/" />
+</Publish>

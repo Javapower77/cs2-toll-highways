@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36212.18 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cs2-toll-highways", "cs2-toll-highways.csproj", "{966221ED-E3DE-4BA3-81B5-B36F8B49127D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{966221ED-E3DE-4BA3-81B5-B36F8B49127D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{966221ED-E3DE-4BA3-81B5-B36F8B49127D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{966221ED-E3DE-4BA3-81B5-B36F8B49127D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{966221ED-E3DE-4BA3-81B5-B36F8B49127D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FF9109AF-932F-45F2-9FA6-7CC6615F271D}
+	EndGlobalSection
+EndGlobal
