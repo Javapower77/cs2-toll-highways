@@ -10,7 +10,7 @@ namespace TollHighways
     public partial class AppliedRoadTollsModification : GameSystemBase
     {
         private PrefabSystem prefabSystem;
-        private EntityQuery _tollroadsQuery;
+        private EntityQuery tollRoadsQuery;
 
         protected override void OnUpdate()
         {
@@ -27,14 +27,14 @@ namespace TollHighways
             this.prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
             this.prefabSystem.TryGetPrefab(new PrefabID("RoadPrefab", "Highway Oneway - 1 lane (Toll 60kph)"), out PrefabBase tollRoadPrefab);
 
-            _tollroadsQuery = SystemAPI.QueryBuilder()
+            tollRoadsQuery = SystemAPI.QueryBuilder()
                 .WithAll<Applied, Game.Net.Curve, Game.Net.Edge, PrefabRef>()
                 .WithNone<Temp, Deleted>()
                 .Build();
 
-            NativeArray<Entity> tollroadsPrefabs = _tollroadsQuery.ToEntityArray(Allocator.Temp);
+            NativeArray<Entity> tollRoadsApplied = tollRoadsQuery.ToEntityArray(Allocator.Temp);
 
-            foreach (Entity _tollsroads in tollroadsPrefabs)
+            foreach (Entity tollRoad in tollRoadsApplied)
             {
                // if (tollroadsPrefabs.t)
             }
