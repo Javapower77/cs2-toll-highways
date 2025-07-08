@@ -40,7 +40,7 @@ namespace TollHighways
             {
                 return new Dictionary<string, string>
                 {
-                    { _setting.GetSettingsLocaleID(), "Intersections Collection" },
+                    { _setting.GetSettingsLocaleID(), "Toll Highways" },
                     { GetLanguageNameLocaleID(), "English"},
                     { _setting.GetOptionTabLocaleID(ModSettings.AboutTab), "About" },
                     // Groups

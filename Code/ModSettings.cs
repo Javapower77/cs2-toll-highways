@@ -72,7 +72,7 @@ namespace TollHighways
         }
 
         [SettingsUISection(AboutTab, AboutSection)]
-        [SettingsUIMultilineText("coui://javapower-intersections-collection/discord-icon-white.png")]
+        [SettingsUIMultilineText("coui://javapower-toll-highways/discord-icon-white.png")]
         public string DiscordServers => string.Empty;
 
         [SettingsUISection(AboutTab, AboutSection)]
