@@ -4,12 +4,15 @@ using Game;
 using Game.Common;
 using Game.Net;
 using Game.Prefabs;
+using Game.Routes;
 using Game.Simulation;
 using Game.Tools;
+using Game.Vehicles;
 using System;
 using System.Runtime.ExceptionServices;
 using Unity.Collections;
 using Unity.Entities;
+using SubLane = Game.Net.SubLane;
 
 namespace TollHighways
 {
@@ -19,7 +22,7 @@ namespace TollHighways
         private PrefabSystem m_PrefabSystem;
         private EntityQuery roadsQuery;
         private EntityQuery tollRoadsQuery;
-        private TimeSystem timeSystem;
+        
 
 
         protected override void OnGameLoaded(Context serializationContext)
@@ -86,12 +89,32 @@ namespace TollHighways
 
         protected override void OnUpdate()
         {
-            DateTime currentTime = this.timeSystem.GetCurrentDateTime();
+            TimeSystem timeSystem = new();
+            DateTime currentTime = timeSystem.GetCurrentDateTime();
             long timeTicks = currentTime.Ticks;
+            PrefabSystem prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
 
             foreach (Entity e in this.tollRoadsQuery.ToEntityArray(Allocator.Temp))
             {
-
+                if (EntityManager.TryGetBuffer(e, true, out DynamicBuffer<SubLane> sublaneObjects))
+                {
+                    if (EntityManager.TryGetBuffer(sublaneObjects[0].m_SubLane, true, out DynamicBuffer<LaneObject> laneObjects))
+                    {
+                        if (laneObjects.Length > 0)
+                        {
+                            for (int i = 0; i < laneObjects.Length; i++)
+                            {
+                                if (EntityManager.TryGetComponent(laneObjects[i].m_LaneObject, out PrefabRef prefabRef))
+                                {
+                                    if(prefabSystem.TryGetPrefab(prefabRef.m_Prefab, out PrefabBase prefabVehicle))
+                                    {
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

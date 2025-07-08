@@ -9,16 +9,8 @@ using Unity.Entities;
 namespace TollHighways
 {
 
-    public struct RoadToll : IComponentData, IQueryTypeParameter, ISerializable
+    public struct RoadToll : IComponentData, IQueryTypeParameter
     {
-        public void Serialize<TWriter>(TWriter writer) where TWriter : IWriter
-        {
-        }
-
-        public void Deserialize<TReader>(TReader reader) where TReader : IReader
-        {
-        }
-
     }
 
 }
