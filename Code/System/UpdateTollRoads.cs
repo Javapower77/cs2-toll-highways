@@ -94,21 +94,29 @@ namespace TollHighways
             long timeTicks = currentTime.Ticks;
             PrefabSystem prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
 
+            // Loop in all Road of type Toll
             foreach (Entity e in this.tollRoadsQuery.ToEntityArray(Allocator.Temp))
             {
+                // Get the Sublanes asociated with the toll road (buffered)
                 if (EntityManager.TryGetBuffer(e, true, out DynamicBuffer<SubLane> sublaneObjects))
                 {
+                    // Get the LaneObjects from the first Sublane of the road that represent the location
+                    // where vehicles passthrough. This is only for this custom made road
                     if (EntityManager.TryGetBuffer(sublaneObjects[0].m_SubLane, true, out DynamicBuffer<LaneObject> laneObjects))
                     {
+                        // It will only objects if a vehicle is present on the lane
                         if (laneObjects.Length > 0)
                         {
+                            // It can be more than one, per example, if the vehicle has a truck or is a cargo truck
                             for (int i = 0; i < laneObjects.Length; i++)
                             {
+                                // Get the PrefabRef of the vehicle present in the lane object
                                 if (EntityManager.TryGetComponent(laneObjects[i].m_LaneObject, out PrefabRef prefabRef))
                                 {
+                                    // Now get the PrefabBase of the vehicle
                                     if(prefabSystem.TryGetPrefab(prefabRef.m_Prefab, out PrefabBase prefabVehicle))
                                     {
-                                        return;
+                                        LogUtil.Info($"Vehicle::{prefabVehicle.name}--Road::{e.Index}:{e.Version}");
                                     }
                                 }
                             }
