@@ -15,7 +15,7 @@ using UnityEngine.Device;
 
 namespace TollHighways
 {
-    [FileLocation(nameof(TollHighways))]
+    [FileLocation("ModsSettings/" + nameof(TollHighways))]
     [SettingsUITabOrder(AboutTab)]
     [SettingsUIGroupOrder(AboutSection)]
     [SettingsUIShowGroupName(AboutSection)]

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
-namespace TollHighways
+namespace TollHighways.Utilities
 {
     /// <summary>
     /// Utility routines for logging.
@@ -59,7 +59,7 @@ namespace TollHighways
             // Build stack trace from the frames.
             // Start at index 1 to skip the call to LogUtil.Exception.
             StringBuilder stackTrace = new StringBuilder();
-            StackFrame[] stackFrames = (new StackTrace()).GetFrames();
+            StackFrame[] stackFrames = new StackTrace().GetFrames();
             for (int i = 1; i < stackFrames.Length; i++)
             {
                 // Build a parameter list for the method.
