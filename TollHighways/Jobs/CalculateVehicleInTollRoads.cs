@@ -1,11 +1,13 @@
-﻿using Game.Net;
+﻿using Colossal.Entities;
+using Game.Net;
 using Game.Prefabs;
+using System.Collections.Generic;
+using TollHighways.Domain;
 using TollHighways.Utilities;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Colossal.Entities;
 using SubLane = Game.Net.SubLane;
 
 namespace TollHighways.Jobs
@@ -24,8 +26,8 @@ namespace TollHighways.Jobs
 
         public void Execute(int index)
         {
-            string[] tollRoadVehicle;
-            
+            List<RoadsVehicles> m_RoadsVehicles = new List<RoadsVehicles>();   
+
             // Loop in all Road of type Toll
             foreach (Entity e in tollRoadEntities)
             {
@@ -48,16 +50,15 @@ namespace TollHighways.Jobs
                                     // Now get the PrefabBase of the vehicle
                                     if (prefabSystem.TryGetPrefab(prefabRef.m_Prefab, out PrefabBase prefabVehicle))
                                     {
+                                        // Add the name and index of toll road entity and the name of the prefab representing the vehicle on the road
+                                        m_RoadsVehicles.Add(
+                                            new RoadsVehicles
+                                            {
+                                                RoadIndex = e.Index + ":" + e.Version, 
+                                                VehiclePrefabName = prefabVehicle.name }
+                                            );
+
                                         LogUtil.Info($"Vehicle({i})::{prefabVehicle.name}--Road::{e.Index}:{e.Version}");
-                                        
-                                        if (i == 0)
-                                        {
-                                            vehiclePrefab1 = prefabVehicle.name;
-                                        } 
-                                        else
-                                        {
-                                            vehiclePrefab2 = prefabVehicle.name;
-                                        }
                                     }
                                 }
                             }
@@ -69,10 +70,9 @@ namespace TollHighways.Jobs
             Results.Add(
                 new VehicleInTollRoadResult
                 {
-                    VehiclePrefab1 = tollRoadVehicle,
-                    VehiclePrefab2 = vehiclePrefab2
+                    RoadsVehiclesArray = m_RoadsVehicles
                 }
-                );
+                );                
         }
     }
 }

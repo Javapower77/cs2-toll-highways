@@ -25,7 +25,7 @@ namespace TollHighways.Systems
         private PrefabSystem m_PrefabSystem;
         private EntityQuery roadsQuery;
         private EntityQuery tollRoadsQuery;
-        
+        private readonly NativeList<VehicleInTollRoadResult> _vehicleInTollRoadResult = new(Allocator.Persistent);
 
 
         protected override void OnGameLoaded(Context serializationContext)
@@ -99,7 +99,12 @@ namespace TollHighways.Systems
 
             var vehicleTollJob = new CalculateVehicleInTollRoads
             {
-                tollRoadEntities = this.tollRoadsQuery.ToEntityArray(Allocator.Temp)
+                tollRoadEntities = this.tollRoadsQuery.ToEntityArray(Allocator.Temp),
+                LaneObjectData = SystemAPI.GetBufferLookup<LaneObject>(true),
+                SubLaneObjectData = SystemAPI.GetBufferLookup<SubLane>(true),
+                PrefabRefData = SystemAPI.GetComponentLookup<PrefabRef>(true),
+                prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>(),
+                Results = _vehicleInTollRoadResult
             };
 
             
