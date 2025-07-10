@@ -48,6 +48,9 @@ namespace TollHighways.Systems
 
             LogUtil.Info("TollHighways::AppliedRoadTollsModification::OnCreate()::Call Function InitializeQueries()");
             InitializeQueries();
+
+            LogUtil.Info("TollHighways::AppliedRoadTollsModification::OnCreate()::Create TollHighwaysEntityCommandBufferSystem");
+            _tollHighwaysECBSystem = World.GetOrCreateSystemManaged<TollHighwaysEntityCommandBufferSystem>();
         }
 
         private void InitializeQueries()
