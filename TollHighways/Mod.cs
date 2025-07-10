@@ -75,7 +75,7 @@ namespace TollHighways
                     return;
                 }
 
-                updateSystem.UpdateAt<UpdateTollRoads>(SystemUpdatePhase.GameSimulation);
+                updateSystem.UpdateAt<UpdateTollRoadsSystem>(SystemUpdatePhase.GameSimulation);
             }
             catch (Exception ex)
             {

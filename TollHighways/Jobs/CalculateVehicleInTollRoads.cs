@@ -6,6 +6,7 @@ using TollHighways.Domain;
 using TollHighways.Utilities;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using SubLane = Game.Net.SubLane;
@@ -14,20 +15,17 @@ namespace TollHighways.Jobs
 {
     // Job to calculate the vehicles passing through a toll road
     [BurstCompile]
-    internal struct CalculateVehicleInTollRoads : IJobParallelFor
+    public struct CalculateVehicleInTollRoads : IJobParallelFor
     {
         [ReadOnly] public NativeArray<Entity> tollRoadEntities;
         [ReadOnly] public BufferLookup<SubLane> SubLaneObjectData;
         [ReadOnly] public BufferLookup<LaneObject> LaneObjectData;
         [ReadOnly] public ComponentLookup<PrefabRef> PrefabRefData;
-        [ReadOnly] public PrefabSystem prefabSystem;
 
         [WriteOnly] public NativeList<VehicleInTollRoadResult> Results;
 
         public void Execute(int index)
         {
-            List<RoadsVehicles> m_RoadsVehicles = new List<RoadsVehicles>();   
-
             // Loop in all Road of type Toll
             foreach (Entity e in tollRoadEntities)
             {
@@ -47,32 +45,23 @@ namespace TollHighways.Jobs
                                 // Get the PrefabRef of the vehicle present in the lane object
                                 if (PrefabRefData.TryGetComponent(laneObjects[i].m_LaneObject, out PrefabRef prefabRef))
                                 {
-                                    // Now get the PrefabBase of the vehicle
-                                    if (prefabSystem.TryGetPrefab(prefabRef.m_Prefab, out PrefabBase prefabVehicle))
-                                    {
-                                        // Add the name and index of toll road entity and the name of the prefab representing the vehicle on the road
-                                        m_RoadsVehicles.Add(
-                                            new RoadsVehicles
-                                            {
-                                                RoadIndex = e.Index + ":" + e.Version, 
-                                                VehiclePrefabName = prefabVehicle.name }
-                                            );
 
-                                        LogUtil.Info($"Vehicle({i})::{prefabVehicle.name}--Road::{e.Index}:{e.Version}");
-                                    }
+                                    // Last step is adding to the Result List the entity representing the road
+                                    // and the PrefabRef of the vehicle, so then can be calculate the pricing according
+                                    // to the vehicle type
+                                    Results.Add(
+                                        new VehicleInTollRoadResult
+                                        {
+                                            TollRoadEntity = e,
+                                            VehiclePrefabRef = prefabRef
+                                        }
+                                        );
                                 }
                             }
                         }
                     }
                 }
-            }
-
-            Results.Add(
-                new VehicleInTollRoadResult
-                {
-                    RoadsVehiclesArray = m_RoadsVehicles
-                }
-                );                
+            }                          
         }
     }
 }

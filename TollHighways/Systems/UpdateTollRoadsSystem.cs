@@ -10,23 +10,27 @@ using Game.Tools;
 using Game.Vehicles;
 using System;
 using System.Runtime.ExceptionServices;
+using TollHighways.Jobs;
+using TollHighways.Utilities;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using SubLane = Game.Net.SubLane;
-using TollHighways.Utilities;
-using TollHighways.Jobs;
 
 
 namespace TollHighways.Systems
 {
-    public partial class UpdateTollRoads : GameSystemBase
+    public partial class UpdateTollRoadsSystem : GameSystemBase
     {
         private PrefabSystem prefabSystem;
         private PrefabSystem m_PrefabSystem;
         private EntityQuery roadsQuery;
         private EntityQuery tollRoadsQuery;
         private readonly NativeList<VehicleInTollRoadResult> _vehicleInTollRoadResult = new(Allocator.Persistent);
+        private NativeArray<Entity> _tollRoadEntities = new(0, Allocator.Persistent);
 
+        // Entity Command Buffer System for immediate updates
+        private TollHighwaysEntityCommandBufferSystem _tollHighwaysECBSystem;
 
         protected override void OnGameLoaded(Context serializationContext)
         {
@@ -92,22 +96,37 @@ namespace TollHighways.Systems
 
         protected override void OnUpdate()
         {
-            TimeSystem timeSystem = new();
-            DateTime currentTime = timeSystem.GetCurrentDateTime();
-            long timeTicks = currentTime.Ticks;
             PrefabSystem prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
 
-            var vehicleTollJob = new CalculateVehicleInTollRoads
-            {
-                tollRoadEntities = this.tollRoadsQuery.ToEntityArray(Allocator.Temp),
-                LaneObjectData = SystemAPI.GetBufferLookup<LaneObject>(true),
-                SubLaneObjectData = SystemAPI.GetBufferLookup<SubLane>(true),
-                PrefabRefData = SystemAPI.GetComponentLookup<PrefabRef>(true),
-                prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>(),
-                Results = _vehicleInTollRoadResult
-            };
+            // Get ECB from the system for immediate updates
+            EntityCommandBuffer ecb = _tollHighwaysECBSystem.CreateCommandBuffer();
 
+            _tollRoadEntities = tollRoadsQuery.ToEntityArray(Allocator.Persistent);
+
+            JobHandle combinedJobHandle = default;
+
+            if (_tollRoadEntities.Length > 0)
+            {
+                var vehicleTollJob = new CalculateVehicleInTollRoads
+                {
+                    tollRoadEntities = _tollRoadEntities,
+                    LaneObjectData = SystemAPI.GetBufferLookup<LaneObject>(true),
+                    SubLaneObjectData = SystemAPI.GetBufferLookup<SubLane>(true),
+                    PrefabRefData = SystemAPI.GetComponentLookup<PrefabRef>(true),
+                    Results = _vehicleInTollRoadResult
+                };
+
+
+                JobHandle vehicleTollJobHandle = vehicleTollJob.Schedule(_tollRoadEntities.Length, 1);
+                combinedJobHandle = JobHandle.CombineDependencies(combinedJobHandle, vehicleTollJobHandle);
+            }
+
+            // Register the job with the ECB system for completion and playback
+            _tollHighwaysECBSystem.AddJobHandleForProducer(combinedJobHandle);
+
+            LogUtil.Info($"_vehicleInTollRoadResult::{_vehicleInTollRoadResult} - Toll Roads::{_tollRoadEntities.Length}");
             
+            //if (prefabSystem.TryGetPrefab(prefabRef.m_Prefab, out PrefabBase prefabVehicle))
         }
     }
 }
