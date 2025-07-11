@@ -7,6 +7,7 @@ using Game.Prefabs;
 using Game.Routes;
 using Game.Simulation;
 using Game.Tools;
+using Game.UI;
 using Game.Vehicles;
 using System;
 using System.Runtime.ExceptionServices;
@@ -27,6 +28,7 @@ namespace TollHighways.Systems
         private EntityQuery roadsQuery;
         private EntityQuery tollRoadsQuery;
         private readonly NativeList<VehicleInTollRoadResult> _vehicleInTollRoadResult = new(Allocator.Persistent);
+     
         private NativeArray<Entity> _tollRoadEntities = new(0, Allocator.Persistent);
 
         // Entity Command Buffer System for immediate updates
@@ -99,15 +101,25 @@ namespace TollHighways.Systems
 
         protected override void OnUpdate()
         {
+            StartAsyncUpdate();           
+        }
+
+        private void StartAsyncUpdate()
+        {
             PrefabSystem prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
 
             // Get ECB from the system for immediate updates
             EntityCommandBuffer ecb = _tollHighwaysECBSystem.CreateCommandBuffer();
 
+            // Ensure we clean up from the previous run
+            _tollRoadEntities.Dispose();
+
+            // Get the toll road entity to process
             _tollRoadEntities = tollRoadsQuery.ToEntityArray(Allocator.Persistent);
 
             JobHandle combinedJobHandle = default;
 
+            // Schedule vehicles in toll road job
             if (_tollRoadEntities.Length > 0)
             {
                 var vehicleTollJob = new CalculateVehicleInTollRoads
@@ -119,7 +131,6 @@ namespace TollHighways.Systems
                     Results = _vehicleInTollRoadResult
                 };
 
-
                 JobHandle vehicleTollJobHandle = vehicleTollJob.Schedule(_tollRoadEntities.Length, 1);
                 combinedJobHandle = JobHandle.CombineDependencies(combinedJobHandle, vehicleTollJobHandle);
             }
@@ -128,7 +139,7 @@ namespace TollHighways.Systems
             _tollHighwaysECBSystem.AddJobHandleForProducer(combinedJobHandle);
 
             LogUtil.Info($"_vehicleInTollRoadResult::{_vehicleInTollRoadResult} - Toll Roads::{_tollRoadEntities.Length}");
-            
+
             //if (prefabSystem.TryGetPrefab(prefabRef.m_Prefab, out PrefabBase prefabVehicle))
         }
     }
