@@ -9,7 +9,7 @@ namespace TollHighways.Jobs
     public struct VehicleInTollRoadResult
     {
         public Entity TollRoadEntity;
-        public PrefabRef VehiclePrefabRef;
+        public Entity VehiclePrefabRef;
     }
 
 }

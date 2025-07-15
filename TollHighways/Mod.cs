@@ -4,16 +4,17 @@ using Colossal.UI;
 using Game;
 using Game.Input;
 using Game.Modding;
+using Game.Prefabs;
 using Game.Prefabs.Modes;
 using Game.SceneFlow;
 using Game.UI.InGame;
 using System;
 using System.IO;
 using System.Reflection;
-using UnityEngine;
-using TollHighways.Utilities;
-using static TollHighways.ModSettings;
 using TollHighways.Systems;
+using TollHighways.Utilities;
+using UnityEngine;
+using static TollHighways.ModSettings;
 
 namespace TollHighways
 {
@@ -75,6 +76,7 @@ namespace TollHighways
                     return;
                 }
 
+                updateSystem.UpdateBefore<TollRoadPrefabUpdateSystem, PrefabInitializeSystem>(SystemUpdatePhase.PrefabUpdate);
                 updateSystem.UpdateAt<UpdateTollRoadsSystem>(SystemUpdatePhase.GameSimulation);
             }
             catch (Exception ex)

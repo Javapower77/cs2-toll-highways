@@ -155,9 +155,14 @@
 	<ItemGroup>
 		<Folder Remove="Temp\" />
 		<Folder Include="Domain\Configurations\" />
+		<Folder Include="Domain\Prefabs\" />
 		<None Remove="C:\Users\jibarra\AppData\LocalLow\Colossal Order\Cities Skylines II\.cache\Modding\Mod.props" />
 		<None Remove="C:\Users\jibarra\AppData\LocalLow\Colossal Order\Cities Skylines II\.cache\Modding\Mod.targets" />
 		<None Remove="Code\Systems\TestFieldsUISystem" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
 	<Target Name="SetupAttributes" BeforeTargets="BeforeBuild">
