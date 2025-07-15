@@ -46,10 +46,16 @@
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
 
 	<ItemGroup>
+		<Compile Remove="Domain\Configurations\**" />
+		<Compile Remove="Domain\Prefabs\**" />
 		<Compile Remove="Resources\assets\ExamplePack\**" />
 		<Compile Remove="UI\**" />
+		<EmbeddedResource Remove="Domain\Configurations\**" />
+		<EmbeddedResource Remove="Domain\Prefabs\**" />
 		<EmbeddedResource Remove="Resources\assets\ExamplePack\**" />
 		<EmbeddedResource Remove="UI\**" />
+		<None Remove="Domain\Configurations\**" />
+		<None Remove="Domain\Prefabs\**" />
 		<None Remove="Resources\assets\ExamplePack\**" />
 		<None Remove="UI\**" />
 	</ItemGroup>
@@ -154,8 +160,6 @@
 
 	<ItemGroup>
 		<Folder Remove="Temp\" />
-		<Folder Include="Domain\Configurations\" />
-		<Folder Include="Domain\Prefabs\" />
 		<None Remove="C:\Users\jibarra\AppData\LocalLow\Colossal Order\Cities Skylines II\.cache\Modding\Mod.props" />
 		<None Remove="C:\Users\jibarra\AppData\LocalLow\Colossal Order\Cities Skylines II\.cache\Modding\Mod.targets" />
 		<None Remove="Code\Systems\TestFieldsUISystem" />

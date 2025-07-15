@@ -9,12 +9,14 @@ using Game.Serialization;
 using Game.Simulation;
 using Game.Tools;
 using Game.UI;
+using Game.UI.InGame;
 using Game.Vehicles;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using TollHighways.Domain;
 using TollHighways.Domain.Components;
 using TollHighways.Jobs;
 using TollHighways.Utilities;
@@ -31,10 +33,11 @@ namespace TollHighways.Systems
     public partial class UpdateTollRoadsSystem : GameSystemBase
     {
         private EntityQuery tollRoadsQuery;
-        public static bool hasRunThisSession = false;
+        
 
         private NativeArray<Entity> _tollRoadEntities = new(0, Allocator.TempJob);
         private NativeHashMap<Entity, Entity> lastVehiclesOnTollRoad; // TollRoadEntity -> VehicleEntity
+        private PrefabSystem prefabSystem;
 
         protected override void OnCreate()
         {
@@ -46,6 +49,8 @@ namespace TollHighways.Systems
 
             LogUtil.Info("TollHighways::UpdateTollRoadsSystem::OnCreate()::Initializing lastVehiclesOnTollRoad");   
             lastVehiclesOnTollRoad = new NativeHashMap<Entity, Entity>(16, Allocator.Persistent);
+
+            prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
         }
 
         // This method is to initialize the queries used in this system and cache them for later use.
@@ -77,11 +82,98 @@ namespace TollHighways.Systems
 
         private void TriggerTollAction(Entity tollRoad, Entity vehicle)
         {
-            // Your custom logic here (e.g., charge toll, log, update stats)
-            
-            
+            TollHighways.Domain.Vehicle _vehicle = new();
 
-            LogUtil.Info($"Vehicle {vehicle.Index} entered toll road {tollRoad.Index}");
+            _vehicle.Type = GetVehicleType(vehicle);
+            prefabSystem.TryGetPrefab(vehicle, out PrefabBase vehiclePrefab);
+            _vehicle.Name = vehiclePrefab?.name ?? "Unknown Vehicle";
+
+            LogUtil.Info($"Vehicle {_vehicle.Name} of type {_vehicle.Type} with Index {vehicle.Index} had entered in the toll road Index {tollRoad.Index}");
+        }
+
+        private Domain.Enums.VehicleType GetVehicleType(Entity vehicleEntity)
+        {
+            // Check if the vehicle has a trailer. Can be a car or a truck.
+            if (SystemAPI.HasBuffer<Game.Vehicles.LayoutElement>(vehicleEntity))
+            {
+                // Get the vehicle layout elements to determine if it is a car or a truck
+                if (EntityManager.TryGetBuffer<Game.Vehicles.LayoutElement>(vehicleEntity, true, out DynamicBuffer<LayoutElement> vehicleLayout))
+                {
+                    if (SystemAPI.HasComponent<Game.Vehicles.PersonalCar>(vehicleLayout[1].m_Vehicle))
+                    {
+                        return TollHighways.Domain.Enums.VehicleType.PersonalCarWithTrailer;
+                    }
+                    else
+                    {
+                        return TollHighways.Domain.Enums.VehicleType.TruckWithTrailer;
+                    }
+                }
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.PublicTransport>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.Bus;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.DeliveryTruck>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.Truck;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.PersonalCar>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.PersonalCar;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.PoliceCar>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.PoliceCar;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.GarbageTruck>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.GarbageTruck;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.Taxi>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.Taxi;
+            }
+            // To identify a motorcycle, we check if the vehicle has a Passenger component and does not have an Odometer component.
+            // Having Odometer component means it is a taxi
+            else if ((SystemAPI.HasBuffer<Game.Vehicles.Passenger>(vehicleEntity)) && (!SystemAPI.HasComponent<Game.Vehicles.Odometer>(vehicleEntity)))
+            {
+                return TollHighways.Domain.Enums.VehicleType.Motorcycle;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.Ambulance>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.Ambulance;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.FireEngine>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.FireEngine;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.EvacuatingTransport>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.EvacuatingTransport;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.ParkMaintenanceVehicle>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.ParkMaintenance;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.RoadMaintenanceVehicle>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.RoadMaintenance;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.Hearse>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.Hearse;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.PrisonerTransport>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.PrisonerTransport;
+            }
+            else if (SystemAPI.HasComponent<Game.Vehicles.PostVan>(vehicleEntity))
+            {
+                return TollHighways.Domain.Enums.VehicleType.PostVan;
+            }
+            
+            // If no specific type is found, return None
+            return TollHighways.Domain.Enums.VehicleType.None;
         }
 
         private NativeList<(Entity tollRoad, Entity vehicle)> GetCurrentVehiclesOnTollRoad()
@@ -110,48 +202,5 @@ namespace TollHighways.Systems
 
             return currentEntries;
         }
-
-        private void StartAsyncUpdate()
-        {
-            JobHandle combinedJobHandle = default;
-
-            NativeArray<Entity> _tollRoadEntities = tollRoadsQuery.ToEntityArray(Allocator.TempJob);
-            NativeList<Entity> _vehiclePrefabEntities = new NativeList<Entity>(Allocator.TempJob);
-
-            // Check if there are toll roads to process and if the job has not run this session
-            // Then execute the job to calculate vehicles in toll roads
-            if (_tollRoadEntities.Length > 0)
-            {
-                var vehicleTollJob = new CalculateVehicleInTollRoads
-                {
-                    tollRoadEntities = _tollRoadEntities,
-                    EdgeObjectData = SystemAPI.GetComponentLookup<Game.Net.Edge>(true),
-                    LaneObjectData = SystemAPI.GetBufferLookup<LaneObject>(true),
-                    SubLaneObjectData = SystemAPI.GetBufferLookup<SubLane>(true),
-                    PrefabRefData = SystemAPI.GetComponentLookup<PrefabRef>(true)
-                    //vehiclePrefabEntities = _vehiclePrefabEntities
-                };
-
-                JobHandle vehicleTollJobHandle = vehicleTollJob.Schedule(_tollRoadEntities.Length, 1);
-                combinedJobHandle = JobHandle.CombineDependencies(combinedJobHandle, vehicleTollJobHandle);
-
-                // Complete the job and convert results
-                combinedJobHandle.Complete();
-
-                if ((combinedJobHandle.IsCompleted) && (_vehiclePrefabEntities.Length > 0))
-                {
-                    Entity vehicleInTollRoad = _vehiclePrefabEntities[0];
-                    LogUtil.Info($"TollHighways::UpdateTollRoadsSystem::StartAsyncUpdate() - Vehicle :: {vehicleInTollRoad}.");
-
-                    if (_vehiclePrefabEntities.Length > 1)
-                    {
-                        Entity vehicleTruckInTollRoad = _vehiclePrefabEntities[1];
-                        LogUtil.Info($"TollHighways::UpdateTollRoadsSystem::StartAsyncUpdate() - Vehicle Truck :: {vehicleTruckInTollRoad}.");
-                    }
-                }
-            }                     
-
-        }
-
     }
 }

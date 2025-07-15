@@ -2,6 +2,7 @@
 using Game.Net;
 using Game.Prefabs;
 using Game.Tools;
+using Game.Vehicles;
 using System.Collections.Generic;
 using TollHighways.Domain;
 using TollHighways.Utilities;
@@ -28,6 +29,7 @@ namespace TollHighways.Jobs
         [ReadOnly] public BufferLookup<LaneObject> LaneObjectData;
         [ReadOnly] public ComponentLookup<PrefabRef> PrefabRefData;
         [ReadOnly] public ComponentLookup<Game.Net.Edge> EdgeObjectData;
+        [ReadOnly] public ComponentLookup<Game.Vehicles.CarTrailerLane> VehicleTrailerData;
         //[WriteOnly] public NativeList<Entity> vehiclePrefabEntities;
         [WriteOnly] public NativeList<(Entity tollRoad, Entity vehicle)> Results;
 
@@ -64,24 +66,15 @@ namespace TollHighways.Jobs
                         // It will only objects if a vehicle is present on the lane
                         if (laneObjects.Length > 0) 
                         {
-                            // It can be more than one, per example, if the vehicle has a truck or is a cargo truck
-                            //for (int i = 0; i < laneObjects.Length; i++)
-                            //{
-                                Entity vehicleEntity = laneObjects[0].m_LaneObject;
+                            Entity vehicleEntity = laneObjects[0].m_LaneObject;
 
+                            // To avoid getting the trailer of a car or a truck
+                            // we ask for the CarLineTrailer component and discard if found it
+                            if (!VehicleTrailerData.TryGetComponent(vehicleEntity, out _))
+                            {
                                 // Add the vehicle-toll road mapping to the Results list
                                 Results.Add((e, vehicleEntity));
-
-                                /*
-                                if (PrefabRefData.TryGetComponent(vehicleEntity, out PrefabRef prefabRef))
-                                {
-                                    if (!vehiclePrefabEntities.Contains(vehicleEntity))
-                                    {
-                                        vehiclePrefabEntities.Add(vehicleEntity);
-                                    }
-                                }
-                                */
-                            //}
+                            }                          
                         }
                     }
                 }
