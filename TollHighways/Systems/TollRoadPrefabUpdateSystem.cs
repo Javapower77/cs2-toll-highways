@@ -13,8 +13,11 @@ namespace TollHighways.Systems
         {
             base.OnCreate();
 
+            // Add the Toll Component to the two custom roads prefabs
+            // in order to be used later in the entity query
             prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
-            AddTollComponentToRoad();
+            AddTollComponentToRoad("Highway Oneway - 1 lane (Toll 60kph)");
+            AddTollComponentToRoad("Highway Oneway - 1 lane - Public Transport (Toll 60kph)");
         }
 
         protected override void OnUpdate()
@@ -23,10 +26,10 @@ namespace TollHighways.Systems
         }
 
         // This method is called to initialize the custom road prefab and add the TollRoadPrefabInfo component
-        private void AddTollComponentToRoad()
+        private void AddTollComponentToRoad(string TollRoadName)
         {
             // Check if the prefab for the toll road exists
-            if (this.prefabSystem.TryGetPrefab(new PrefabID("RoadPrefab", "Highway Oneway - 1 lane (Toll 60kph)"), out PrefabBase tollRoadPrefab))
+            if (this.prefabSystem.TryGetPrefab(new PrefabID("RoadPrefab", TollRoadName), out PrefabBase tollRoadPrefab))
             {
                 // Check if the prefab already has the TollRoadPrefabInfo component
                 if (tollRoadPrefab.GetComponent<TollRoadPrefabInfo>())

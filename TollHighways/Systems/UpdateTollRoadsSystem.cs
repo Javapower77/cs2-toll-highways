@@ -38,6 +38,7 @@ namespace TollHighways.Systems
         private NativeArray<Entity> _tollRoadEntities = new(0, Allocator.TempJob);
         private NativeHashMap<Entity, Entity> lastVehiclesOnTollRoad; // TollRoadEntity -> VehicleEntity
         private PrefabSystem prefabSystem;
+        private EntityQuery m_InsightQuery;
 
         protected override void OnCreate()
         {
@@ -51,6 +52,9 @@ namespace TollHighways.Systems
             lastVehiclesOnTollRoad = new NativeHashMap<Entity, Entity>(16, Allocator.Persistent);
 
             prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+
+            LogUtil.Info("TollHighways::UpdateTollRoadsSystem::OnCreate()::Registering Insight Query");
+            m_InsightQuery = GetEntityQuery(ComponentType.ReadWrite<TollInsights>());
         }
 
         // This method is to initialize the queries used in this system and cache them for later use.
@@ -85,10 +89,51 @@ namespace TollHighways.Systems
             TollHighways.Domain.Vehicle _vehicle = new();
 
             _vehicle.Type = GetVehicleType(vehicle);
-            prefabSystem.TryGetPrefab(vehicle, out PrefabBase vehiclePrefab);
-            _vehicle.Name = vehiclePrefab?.name ?? "Unknown Vehicle";
+            if (EntityManager.TryGetComponent(vehicle, out PrefabRef vehiclePrefab))
+            {
+                if (prefabSystem.TryGetPrefab<PrefabBase>(vehiclePrefab, out var prefab))
+                {
+                    _vehicle.Name = prefab.name;
+                }
+            }
 
             LogUtil.Info($"Vehicle {_vehicle.Name} of type {_vehicle.Type} with Index {vehicle.Index} had entered in the toll road Index {tollRoad.Index}");
+
+            Entity insightEntity = Entity.Null;
+            using (var insightEntities = m_InsightQuery.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var entity in insightEntities)
+                {
+                    var insightData = EntityManager.GetComponentData<TollInsights>(entity);
+                    // Check if the insight data matches the toll road and vehicle name
+                    if (insightData.TollRoadPrefab.Equals(tollRoad) && insightData.VehicleName.Equals(_vehicle.Name))
+                    {
+                        insightEntity = entity;
+                        break;
+                    }
+                }
+            }
+
+            if (insightEntity != Entity.Null)
+            {
+                // If the insight entity already exists, increment the pass-through count
+                var insightData = EntityManager.GetComponentData<TollInsights>(insightEntity);
+                insightData.PassThroughCount++;
+                EntityManager.SetComponentData(insightEntity, insightData);
+            }
+            else
+            {
+                // If the insight entity does not exist, create a new one
+                TollInsights newInsight = new()
+                {
+                    TollRoadPrefab = tollRoad,
+                    VehicleType = _vehicle.Type,
+                    VehicleName = _vehicle.Name,
+                    PassThroughCount = 1
+                };
+                insightEntity = EntityManager.CreateEntity();
+                EntityManager.AddComponentData(insightEntity, newInsight);
+            }
         }
 
         private Domain.Enums.VehicleType GetVehicleType(Entity vehicleEntity)
@@ -189,6 +234,7 @@ namespace TollHighways.Systems
                 LaneObjectData = SystemAPI.GetBufferLookup<Game.Net.LaneObject>(true),
                 SubLaneObjectData = SystemAPI.GetBufferLookup<Game.Net.SubLane>(true),
                 PrefabRefData = SystemAPI.GetComponentLookup<Game.Prefabs.PrefabRef>(true),
+                VehicleTrailerData = SystemAPI.GetComponentLookup<Game.Vehicles.CarTrailerLane>(true),
                 Results = currentEntries // Pass the currentEntries list to the job
             };
 

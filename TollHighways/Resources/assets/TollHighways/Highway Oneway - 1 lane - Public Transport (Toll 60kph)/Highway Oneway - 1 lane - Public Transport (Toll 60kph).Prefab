@@ -1,7 +1,7 @@
 {
     "$id": 0,
     "$type": "0|Game.Prefabs.RoadPrefab, Game",
-    "name": "Highway Oneway - 1 lane (Toll 60kph)",
+    "name": "Highway Oneway - 1 lane - Public Transport (Toll 60kph)",
     "active": true,
     "components": {
         "$id": 1,
@@ -1448,7 +1448,7 @@
             {
                 "$id": 71,
                 "$type": 17,
-                "m_Section": $fstrref:"UnityGUID:5bad9d5650ca0174f82b62443907f54a",
+                "m_Section": $fstrref:"UnityGUID:86bc699664f19a84e9407adbaa83c911",
                 "m_RequireAll": {
                     "$id": 72,
                     "$type": 18,
@@ -1640,10 +1640,10 @@
         ]
     },
     "m_MaxSlopeSteepness": 0.2,
-    "m_AggregateType": $fstrref:"UnityGUID:29d6188a9f3a1a142947c2c5e647f8ff",
+    "m_AggregateType": $fstrref:"UnityGUID:5628d04b33a20c44981b505d5b1bf78c",
     "m_StyleType": null,
     "m_InvertMode": 0,
-    "m_RoadType": 0,
+    "m_RoadType": 1,
     "m_SpeedLimit": 60,
     "m_ZoneBlock": null,
     "m_TrafficLights": false,

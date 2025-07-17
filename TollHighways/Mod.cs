@@ -76,7 +76,7 @@ namespace TollHighways
                     return;
                 }
 
-                updateSystem.UpdateBefore<TollRoadPrefabUpdateSystem, PrefabInitializeSystem>(SystemUpdatePhase.PrefabUpdate);
+                updateSystem.UpdateAfter<TollRoadPrefabUpdateSystem>(SystemUpdatePhase.Deserialize);
                 updateSystem.UpdateAt<UpdateTollRoadsSystem>(SystemUpdatePhase.GameSimulation);
             }
             catch (Exception ex)
