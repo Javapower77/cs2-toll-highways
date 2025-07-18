@@ -1,5 +1,7 @@
 ﻿using Game;
 using Game.Prefabs;
+using Game.Tools;
+using Game.UI.InGame;
 using TollHighways.Domain.Components;
 using TollHighways.Utilities;
 
@@ -18,11 +20,22 @@ namespace TollHighways.Systems
             prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
             AddTollComponentToRoad("Highway Oneway - 1 lane (Toll 60kph)");
             AddTollComponentToRoad("Highway Oneway - 1 lane - Public Transport (Toll 60kph)");
+            EnableSelectForStaticObjectPrefab("TollBooth");
         }
 
         protected override void OnUpdate()
         {
             return;
+        }
+
+        private void EnableSelectForStaticObjectPrefab(string StaticObjectPrefabName)
+        {
+            if (this.prefabSystem.TryGetPrefab(new PrefabID("StaticObjectPrefab", StaticObjectPrefabName), out PrefabBase m_staticObjectPrefab))
+            {
+                int i = 0;
+
+            }
+
         }
 
         // This method is called to initialize the custom road prefab and add the TollRoadPrefabInfo component

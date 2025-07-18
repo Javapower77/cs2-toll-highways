@@ -36,17 +36,17 @@ namespace TollHighways.Domain
         {
             reader.Read(out TollRoadPrefab);
             reader.Read(out int vehicleTypeInt);
-            VehicleType = (Domain.Enums.VehicleType)vehicleTypeInt; // Deserialize enum from int
+            VehicleType = (Domain.Enums.VehicleType)vehicleTypeInt; // Deserialize enum from int  
+            reader.Read(out this.PassThroughCount);
             reader.Read(out string VehicleName);
-            reader.Read(out PassThroughCount);
         }
 
         public void Serialize<TWriter>(TWriter writer) where TWriter : IWriter
         {
             writer.Write(TollRoadPrefab);
             writer.Write((int)VehicleType); // Serialize enum as int
+            writer.Write(this.PassThroughCount);
             writer.Write(VehicleName.ToString());
-            writer.Write(PassThroughCount);
         }
     }
 }

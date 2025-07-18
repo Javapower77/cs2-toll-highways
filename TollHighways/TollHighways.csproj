@@ -46,21 +46,6 @@
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
 
 	<ItemGroup>
-		<Compile Remove="Domain\Configurations\**" />
-		<Compile Remove="Domain\Prefabs\**" />
-		<Compile Remove="Resources\assets\ExamplePack\**" />
-		<Compile Remove="UI\**" />
-		<EmbeddedResource Remove="Domain\Configurations\**" />
-		<EmbeddedResource Remove="Domain\Prefabs\**" />
-		<EmbeddedResource Remove="Resources\assets\ExamplePack\**" />
-		<EmbeddedResource Remove="UI\**" />
-		<None Remove="Domain\Configurations\**" />
-		<None Remove="Domain\Prefabs\**" />
-		<None Remove="Resources\assets\ExamplePack\**" />
-		<None Remove="UI\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Reference Include="Colossal.Collections">
 			<Private>false</Private>
 		</Reference>
@@ -175,6 +160,11 @@
 		<XmlPoke XmlInputPath="$(PublishConfigurationPath)" Value="$(Version)" Query="//ModVersion/@Value" />
 	</Target>
 
+	<!-- Automatically build the UI with the project.  -->
+	<Target Name="BuildUI" AfterTargets="AfterBuild">
+		<Exec Command="npm run build" WorkingDirectory="$(ProjectDir)/UI" />
+	</Target>
+	
 	<Target Name="GetAdditionalFiles" AfterTargets="DeployWIP">
 		<ItemGroup>
 			<AdditionalFilesToDeploy Include="$(AdditionalFilesDirectory)\**\*.*" />

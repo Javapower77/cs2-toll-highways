@@ -33,12 +33,9 @@ namespace TollHighways.Systems
     public partial class UpdateTollRoadsSystem : GameSystemBase
     {
         private EntityQuery tollRoadsQuery;
-        
-
-        private NativeArray<Entity> _tollRoadEntities = new(0, Allocator.TempJob);
         private NativeHashMap<Entity, Entity> lastVehiclesOnTollRoad; // TollRoadEntity -> VehicleEntity
         private PrefabSystem prefabSystem;
-        private EntityQuery m_InsightQuery;
+        private EntityQuery InsightQueryForTolls;
 
         protected override void OnCreate()
         {
@@ -52,9 +49,6 @@ namespace TollHighways.Systems
             lastVehiclesOnTollRoad = new NativeHashMap<Entity, Entity>(16, Allocator.Persistent);
 
             prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
-
-            LogUtil.Info("TollHighways::UpdateTollRoadsSystem::OnCreate()::Registering Insight Query");
-            m_InsightQuery = GetEntityQuery(ComponentType.ReadWrite<TollInsights>());
         }
 
         // This method is to initialize the queries used in this system and cache them for later use.
@@ -66,6 +60,11 @@ namespace TollHighways.Systems
                     .WithAll<Game.Prefabs.PrefabRef, TollRoadPrefabData>()
                     .WithNone<Game.Prefabs.RoadComposition>()
                     .Build();
+
+            // Query all entities with TollInsights component
+            InsightQueryForTolls = SystemAPI.QueryBuilder()
+                .WithAll<TollInsights>()
+                .Build();
         }
 
         protected override void OnUpdate()
@@ -100,13 +99,13 @@ namespace TollHighways.Systems
             LogUtil.Info($"Vehicle {_vehicle.Name} of type {_vehicle.Type} with Index {vehicle.Index} had entered in the toll road Index {tollRoad.Index}");
 
             Entity insightEntity = Entity.Null;
-            using (var insightEntities = m_InsightQuery.ToEntityArray(Allocator.Temp))
+            using (var insightEntities = InsightQueryForTolls.ToEntityArray(Allocator.Temp))
             {
                 foreach (var entity in insightEntities)
                 {
                     var insightData = EntityManager.GetComponentData<TollInsights>(entity);
                     // Check if the insight data matches the toll road and vehicle name
-                    if (insightData.TollRoadPrefab.Equals(tollRoad) && insightData.VehicleName.Equals(_vehicle.Name))
+                    if (insightData.TollRoadPrefab.Equals(tollRoad) && insightData.VehicleName.Equals(_vehicle.Name) && insightData.VehicleType.Equals(_vehicle.Type))
                     {
                         insightEntity = entity;
                         break;
@@ -134,8 +133,36 @@ namespace TollHighways.Systems
                 insightEntity = EntityManager.CreateEntity();
                 EntityManager.AddComponentData(insightEntity, newInsight);
             }
+
+            List<TollInsights> insights = GetTollInsightsForPrefab(tollRoad);
         }
 
+        public List<TollInsights> GetTollInsightsForPrefab(Entity tollRoadPrefabEntity)
+        {
+            var result = new List<TollInsights>();
+            using (var entities = InsightQueryForTolls.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var entity in entities)
+                {
+                    var insight = EntityManager.GetComponentData<TollInsights>(entity);
+                    if (insight.TollRoadPrefab == tollRoadPrefabEntity)
+                    {
+                        result.Add(insight);
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        ///  This function determines the type of vehicle based on the components present in the vehicle entity.
+        /// </summary>
+        /// <param name="vehicleEntity">
+        /// The entity representing the vehicle.
+        /// </param>
+        /// <returns>
+        /// Enumeration representing the type of vehicle defined in the TollHighways.Domain.Enums namespace.
+        /// </returns>
         private Domain.Enums.VehicleType GetVehicleType(Entity vehicleEntity)
         {
             // Check if the vehicle has a trailer. Can be a car or a truck.
@@ -144,6 +171,10 @@ namespace TollHighways.Systems
                 // Get the vehicle layout elements to determine if it is a car or a truck
                 if (EntityManager.TryGetBuffer<Game.Vehicles.LayoutElement>(vehicleEntity, true, out DynamicBuffer<LayoutElement> vehicleLayout))
                 {
+                    // The component LayoutElement is used to represent the vehicle layout,
+                    // which can be used to determine if the trailer are attached to a car or a truck.
+                    // Index position 1 can have a Car object or a DeliveryTruck object. This way we can determine
+                    // if the vehicle is a car with a trailer or a truck with a trailer.
                     if (SystemAPI.HasComponent<Game.Vehicles.PersonalCar>(vehicleLayout[1].m_Vehicle))
                     {
                         return TollHighways.Domain.Enums.VehicleType.PersonalCarWithTrailer;
@@ -154,26 +185,32 @@ namespace TollHighways.Systems
                     }
                 }
             }
+            // Check if the PublicTransport component is present, which indicates the vehicle type is a bus.
             else if (SystemAPI.HasComponent<Game.Vehicles.PublicTransport>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.Bus;
             }
+            // Check if DeliveryTruck component is present, which indicates the vehicle type is a truck.
             else if (SystemAPI.HasComponent<Game.Vehicles.DeliveryTruck>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.Truck;
             }
+            // Check if PersonalCar component is present, which indicates the vehicle type is a car.
             else if (SystemAPI.HasComponent<Game.Vehicles.PersonalCar>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.PersonalCar;
             }
+            // Check if PoliceCar component is present, which indicates the vehicle type is a police car.
             else if (SystemAPI.HasComponent<Game.Vehicles.PoliceCar>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.PoliceCar;
             }
+            // Check if GarbageTruck component is present, which indicates the vehicle type is a garbage truck.
             else if (SystemAPI.HasComponent<Game.Vehicles.GarbageTruck>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.GarbageTruck;
             }
+            // Check if Taxi component is present, which indicates the vehicle type is a taxi.
             else if (SystemAPI.HasComponent<Game.Vehicles.Taxi>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.Taxi;
@@ -184,34 +221,42 @@ namespace TollHighways.Systems
             {
                 return TollHighways.Domain.Enums.VehicleType.Motorcycle;
             }
+            // Check if Ambulance component is present, which indicates the vehicle type is an ambulance.
             else if (SystemAPI.HasComponent<Game.Vehicles.Ambulance>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.Ambulance;
             }
+            // Check if FireEngine component is present, which indicates the vehicle type is a fire engine.
             else if (SystemAPI.HasComponent<Game.Vehicles.FireEngine>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.FireEngine;
             }
+            //
             else if (SystemAPI.HasComponent<Game.Vehicles.EvacuatingTransport>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.EvacuatingTransport;
             }
+            // Check if ParkMaintenanceVehicle component is present, which indicates the vehicle type is a park maintenance vehicle.
             else if (SystemAPI.HasComponent<Game.Vehicles.ParkMaintenanceVehicle>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.ParkMaintenance;
             }
+            // Check if RoadMaintenanceVehicle component is present, which indicates the vehicle type is a road maintenance vehicle.
             else if (SystemAPI.HasComponent<Game.Vehicles.RoadMaintenanceVehicle>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.RoadMaintenance;
             }
+            // Check if Hearse component is present, which indicates the vehicle type is a hearse.
             else if (SystemAPI.HasComponent<Game.Vehicles.Hearse>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.Hearse;
             }
+            // Check if PrisonerTransport component is present, which indicates the vehicle type is a prisoner transport.
             else if (SystemAPI.HasComponent<Game.Vehicles.PrisonerTransport>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.PrisonerTransport;
             }
+            // Last, check if PostVan component is present, which indicates the vehicle type is a post van.
             else if (SystemAPI.HasComponent<Game.Vehicles.PostVan>(vehicleEntity))
             {
                 return TollHighways.Domain.Enums.VehicleType.PostVan;
